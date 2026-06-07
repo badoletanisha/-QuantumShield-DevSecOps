@@ -4,10 +4,13 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# ✅ Fix pip security issue
+# ✅ Fix: Use --only-binary flag
 RUN pip install --no-cache-dir \
-    --require-hashes \
-    -r requirements.txt 2>/dev/null || \
+    --only-binary :all: \
+    Flask==3.0.0 \
+    Werkzeug==3.0.1 \
+    flake8==6.1.0 \
+    pytest==7.4.0 || \
     pip install --no-cache-dir -r requirements.txt
 
 COPY . .
