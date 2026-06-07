@@ -9,10 +9,10 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# ✅ Fix 1: Strong random secret key
+# ✅ Strong random secret key
 app.secret_key = secrets.token_hex(32)
 
-# ✅ Fix 2: Security configurations
+# ✅ Security configurations
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
@@ -27,6 +27,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg'}
+
+# ✅ Fix: Define constants for template names
+LOGIN_TEMPLATE = "login.html"
+UPLOAD_TEMPLATE = "upload.html"
 
 
 def allowed_file(filename):
@@ -52,8 +56,9 @@ def init_db():
                 password TEXT NOT NULL
             )
         """)
-        # ✅ Fix 3: Use environment variable for password
-        admin_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
+        admin_pass = os.environ.get(
+            "ADMIN_PASSWORD", "admin123"
+        )
         conn.execute("""
             INSERT OR IGNORE INTO users (username, password)
             VALUES (?, ?)
@@ -63,7 +68,6 @@ def init_db():
 init_db()
 
 
-# ✅ Fix 4: Specify HTTP methods explicitly
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -72,11 +76,11 @@ def login():
 
         if not username or not password:
             flash("Username and password required")
-            return render_template("login.html")
+            return render_template(LOGIN_TEMPLATE)
 
         if len(username) > 50 or len(password) > 50:
             flash("Invalid input length")
-            return render_template("login.html")
+            return render_template(LOGIN_TEMPLATE)
 
         with get_db() as conn:
             user = conn.execute(
@@ -94,10 +98,9 @@ def login():
             else:
                 flash("Invalid credentials")
 
-    return render_template("login.html")
+    return render_template(LOGIN_TEMPLATE)
 
 
-# ✅ Fix 5: Specify HTTP methods explicitly
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if "user" not in session:
@@ -109,13 +112,13 @@ def upload():
         if not file or not file.filename:
             flash("No file selected")
             return render_template(
-                "upload.html", user=session["user"]
+                UPLOAD_TEMPLATE, user=session["user"]
             )
 
         if not allowed_file(file.filename):
             flash("File type not allowed!")
             return render_template(
-                "upload.html", user=session["user"]
+                UPLOAD_TEMPLATE, user=session["user"]
             )
 
         filename = secure_filename(file.filename)
@@ -125,23 +128,22 @@ def upload():
         file.save(save_path)
         flash("File uploaded successfully!")
 
-    return render_template("upload.html", user=session["user"])
+    return render_template(
+        UPLOAD_TEMPLATE, user=session["user"]
+    )
 
 
-# ✅ Fix 6: Specify HTTP methods explicitly
 @app.route("/logout", methods=["GET"])
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
 
-# ✅ Fix 7: Specify HTTP methods explicitly
 @app.route("/health", methods=["GET"])
 def health():
     return {"status": "ok"}, 200
 
 
 if __name__ == "__main__":
-    # ✅ Fix 8: Bind to localhost only in dev
     host = os.environ.get("FLASK_HOST", "127.0.0.1")
     app.run(host=host, port=5000, debug=False)
