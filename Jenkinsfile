@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'jenkins-agent'
-    }
+    agent any
 
     environment {
         IMAGE_REPO    = "flask-app"
