@@ -145,5 +145,5 @@ def health():
 
 
 if __name__ == "__main__":
-    host = os.environ.get("FLASK_HOST", "127.0.0.1")
+    host = os.environ.get("FLASK_HOST", "0.0.0.0")
     app.run(host=host, port=5000, debug=False)
